@@ -1,0 +1,23 @@
+# {{ ansible_managed }}
+# CIS-aligned SSH daemon hardening. Managed by Ansible - do not edit by hand.
+
+Port {{ harden_ssh_port }}
+Protocol 2
+
+PermitRootLogin {{ harden_ssh_permit_root_login }}
+PasswordAuthentication {{ harden_ssh_password_authentication }}
+PermitEmptyPasswords no
+ChallengeResponseAuthentication no
+
+MaxAuthTries {{ harden_ssh_max_auth_tries }}
+LoginGraceTime {{ harden_ssh_login_grace_time }}
+X11Forwarding {{ harden_ssh_x11_forwarding }}
+
+ClientAliveInterval {{ harden_ssh_client_alive_interval }}
+ClientAliveCountMax {{ harden_ssh_client_alive_count_max }}
+
+IgnoreRhosts yes
+HostbasedAuthentication no
+PermitUserEnvironment no
+
+AllowGroups {{ harden_ssh_allow_groups }}

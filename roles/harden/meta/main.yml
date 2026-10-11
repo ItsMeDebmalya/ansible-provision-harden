@@ -1,0 +1,17 @@
+---
+galaxy_info:
+  role_name: harden
+  author: Debmalya Dey
+  description: CIS-aligned Linux hardening - SSH, firewall, sysctl, password policy, auditd, fail2ban.
+  license: MIT
+  min_ansible_version: "2.14"
+  platforms:
+    - name: Ubuntu
+      versions: [focal, jammy, noble]
+    - name: EL
+      versions: ["8", "9"]
+  galaxy_tags:
+    - hardening
+    - security
+    - cis
+dependencies: []

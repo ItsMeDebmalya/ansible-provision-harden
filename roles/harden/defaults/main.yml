@@ -1,0 +1,39 @@
+---
+# SSH hardening (CIS 5.2.x)
+harden_ssh_port: 22
+harden_ssh_permit_root_login: "no"
+harden_ssh_password_authentication: "no"
+harden_ssh_max_auth_tries: 4
+harden_ssh_x11_forwarding: "no"
+harden_ssh_client_alive_interval: 300
+harden_ssh_client_alive_count_max: 2
+harden_ssh_login_grace_time: 60
+harden_ssh_allow_groups: "ssh-users"
+
+# Host firewall (CIS 3.5.x)
+harden_manage_firewall: true
+harden_firewall_allowed_tcp_ports:
+  - "{{ harden_ssh_port }}"
+
+# Password / login policy (CIS 5.4.x)
+harden_password_max_days: 365
+harden_password_min_days: 7
+harden_password_warn_age: 7
+
+# Kernel parameters / sysctl network hardening (CIS 3.x)
+harden_sysctl_settings:
+  net.ipv4.conf.all.accept_redirects: 0
+  net.ipv4.conf.all.send_redirects: 0
+  net.ipv4.conf.all.accept_source_route: 0
+  net.ipv4.conf.all.log_martians: 1
+  net.ipv4.icmp_echo_ignore_broadcasts: 1
+  net.ipv4.tcp_syncookies: 1
+  kernel.randomize_va_space: 2
+
+# Auditing & intrusion prevention
+harden_enable_auditd: true
+harden_enable_fail2ban: true
+
+# When true, skip tasks that cannot run inside an unprivileged container
+# (set automatically by Molecule; see molecule/default/converge.yml).
+harden_in_container: false

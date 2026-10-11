@@ -1,0 +1,88 @@
+---
+# harden: CIS-aligned Linux hardening. Each block cites the relevant CIS
+# control area. Tasks that require a real kernel/init are skipped when
+# harden_in_container is true so the role stays testable under Molecule.
+
+# --- Access group for SSH (CIS 5.2.) -------------------------------------
+- name: Ensure SSH access group exists
+  ansible.builtin.group:
+    name: "{{ harden_ssh_allow_groups }}"
+    state: present
+
+- name: Add admin user to SSH access group
+  ansible.builtin.user:
+    name: "{{ provision_admin_user | default('ansible') }}"
+    groups: "{{ harden_ssh_allow_groups }}"
+    append: true
+
+# --- SSH daemon hardening (CIS 5.2.x) ------------------------------------
+- name: Apply hardened sshd configuration
+  ansible.builtin.template:
+    src: sshd_config_hardening.j2
+    dest: /etc/ssh/sshd_config.d/99-hardening.conf
+    owner: root
+    group: root
+    mode: "0600"
+    validate: "sshd -t -f %s"
+  notify: Restart sshd
+
+# --- Password / login policy (CIS 5.4.1) ---------------------------------
+- name: Set password ageing policy in /etc/login.defs
+  ansible.builtin.lineinfile:
+    path: /etc/login.defs
+    regexp: "^{{ item.key }}\\s"
+    line: "{{ item.key }}\t{{ item.value }}"
+    state: present
+  loop:
+    - { key: "PASS_MAX_DAYS", value: "{{ harden_password_max_days }}" }
+    - { key: "PASS_MIN_DAYS", value: "{{ harden_password_min_days }}" }
+    - { key: "PASS_WARN_AGE", value: "{{ harden_password_warn_age }}" }
+
+# --- Kernel / network sysctl hardening (CIS 3.x) -------------------------
+- name: Apply sysctl network hardening
+  ansible.posix.sysctl:
+    name: "{{ item.key }}"
+    value: "{{ item.value }}"
+    sysctl_set: true
+    state: present
+    reload: "{{ not harden_in_container }}"
+  loop: "{{ harden_sysctl_settings | dict2items }}"
+  failed_when: false   # read-only /proc inside some containers must not fail
+
+# --- Host firewall (CIS 3.5.x) -------------------------------------------
+- name: Harden host firewall
+  ansible.builtin.include_tasks: firewall.yml
+  when:
+    - harden_manage_firewall | bool
+    - not harden_in_container
+
+# --- Auditing & intrusion prevention -------------------------------------
+- name: Install and enable auditd
+  when: harden_enable_auditd | bool
+  block:
+    - name: Install auditd package
+      ansible.builtin.package:
+        name: "{{ 'auditd' if ansible_os_family == 'Debian' else 'audit' }}"
+        state: present
+
+    - name: Enable and start auditd
+      ansible.builtin.service:
+        name: auditd
+        state: started
+        enabled: true
+      when: not harden_in_container
+
+- name: Install and enable fail2ban
+  when: harden_enable_fail2ban | bool
+  block:
+    - name: Install fail2ban package
+      ansible.builtin.package:
+        name: fail2ban
+        state: present
+
+    - name: Enable and start fail2ban
+      ansible.builtin.service:
+        name: fail2ban
+        state: started
+        enabled: true
+      when: not harden_in_container

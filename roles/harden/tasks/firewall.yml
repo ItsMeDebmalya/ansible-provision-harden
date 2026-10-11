@@ -1,0 +1,54 @@
+---
+# Host firewall: default-deny inbound, allow explicitly listed TCP ports.
+# Uses ufw on Debian family, firewalld on RHEL family.
+
+- name: Configure ufw (Debian family)
+  when: ansible_os_family == "Debian"
+  block:
+    - name: Install ufw
+      ansible.builtin.package:
+        name: ufw
+        state: present
+
+    - name: Set ufw default deny incoming
+      community.general.ufw:
+        direction: incoming
+        policy: deny
+
+    - name: Set ufw default allow outgoing
+      community.general.ufw:
+        direction: outgoing
+        policy: allow
+
+    - name: Allow configured TCP ports
+      community.general.ufw:
+        rule: allow
+        port: "{{ item }}"
+        proto: tcp
+      loop: "{{ harden_firewall_allowed_tcp_ports }}"
+
+    - name: Enable ufw
+      community.general.ufw:
+        state: enabled
+
+- name: Configure firewalld (RHEL family)
+  when: ansible_os_family == "RedHat"
+  block:
+    - name: Install firewalld
+      ansible.builtin.package:
+        name: firewalld
+        state: present
+
+    - name: Enable and start firewalld
+      ansible.builtin.service:
+        name: firewalld
+        state: started
+        enabled: true
+
+    - name: Allow configured TCP ports
+      ansible.posix.firewalld:
+        port: "{{ item }}/tcp"
+        permanent: true
+        immediate: true
+        state: enabled
+      loop: "{{ harden_firewall_allowed_tcp_ports }}"
