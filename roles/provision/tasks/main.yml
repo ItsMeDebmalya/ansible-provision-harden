@@ -22,9 +22,23 @@
   when: ansible_os_family == "RedHat"
 
 # Timezone is set after tzdata is installed so the zoneinfo DB is present.
-- name: Set system timezone
-  community.general.timezone:
-    name: "{{ provision_timezone }}"
+# Done via plain file ops (no hwclock/timedatectl) so it works on real hosts
+# and inside containers alike.
+- name: Point /etc/localtime at the configured timezone
+  ansible.builtin.file:
+    src: "/usr/share/zoneinfo/{{ provision_timezone }}"
+    dest: /etc/localtime
+    state: link
+    force: true
+
+- name: Record timezone in /etc/timezone (Debian family)
+  ansible.builtin.copy:
+    dest: /etc/timezone
+    content: "{{ provision_timezone }}\n"
+    owner: root
+    group: root
+    mode: "0644"
+  when: ansible_os_family == "Debian"
 
 - name: Resolve time-sync service name per distro family
   ansible.builtin.set_fact:
