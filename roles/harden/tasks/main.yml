@@ -3,6 +3,17 @@
 # control area. Tasks that require a real kernel/init are skipped when
 # harden_in_container is true so the role stays testable under Molecule.
 
+# --- Prerequisites --------------------------------------------------------
+- name: Ensure openssh-server is installed (required to validate sshd config)
+  ansible.builtin.package:
+    name: openssh-server
+    state: present
+
+- name: Generate any missing SSH host keys (so sshd -t validation succeeds)
+  ansible.builtin.command: ssh-keygen -A
+  args:
+    creates: /etc/ssh/ssh_host_ed25519_key
+
 # --- Access group for SSH (CIS 5.2.) -------------------------------------
 - name: Ensure SSH access group exists
   ansible.builtin.group:
@@ -75,6 +86,12 @@
 - name: Install and enable fail2ban
   when: harden_enable_fail2ban | bool
   block:
+    - name: Enable EPEL repository (RHEL family, provides fail2ban)
+      ansible.builtin.dnf:
+        name: epel-release
+        state: present
+      when: ansible_os_family == "RedHat"
+
     - name: Install fail2ban package
       ansible.builtin.package:
         name: fail2ban

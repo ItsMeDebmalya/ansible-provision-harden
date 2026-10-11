@@ -13,7 +13,6 @@ provision_base_packages:
   - curl
   - wget
   - git
-  - htop
   - unzip
   - chrony
 
