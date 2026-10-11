@@ -1,0 +1,19 @@
+---
+# Master playbook: a single run brings a fresh host to a security-baselined,
+# production-ready state.
+#
+#   ansible-playbook site.yml
+#
+# Run a single stage with tags, e.g.:
+#   ansible-playbook site.yml --tags harden
+
+- name: Provision, patch and harden Linux servers
+  hosts: linux_servers
+  become: true
+  roles:
+    - role: provision
+      tags: [provision]
+    - role: patch
+      tags: [patch]
+    - role: harden
+      tags: [harden]

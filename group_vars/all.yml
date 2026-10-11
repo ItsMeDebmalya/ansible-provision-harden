@@ -1,0 +1,36 @@
+---
+# Global variables applied to every managed host.
+# Role-specific defaults live in each role's defaults/main.yml and can be
+# overridden here or per-group/per-host.
+
+# --- provision role ---------------------------------------------------------
+provision_timezone: "UTC"
+provision_admin_user: "ansible"
+# Public keys authorised for the admin user (add your own):
+provision_admin_authorized_keys: []
+provision_base_packages:
+  - vim
+  - curl
+  - wget
+  - git
+  - htop
+  - unzip
+  - chrony
+
+# --- patch role -------------------------------------------------------------
+patch_reboot_if_required: false      # set true in maintenance windows
+patch_autoremove: true
+
+# --- harden role (CIS-aligned) ---------------------------------------------
+harden_ssh_port: 22
+harden_ssh_permit_root_login: "no"
+harden_ssh_password_authentication: "no"
+harden_ssh_max_auth_tries: 4
+harden_ssh_allow_groups: "ssh-users"
+harden_firewall_allowed_tcp_ports:
+  - "{{ harden_ssh_port }}"
+harden_password_max_days: 365
+harden_password_min_days: 7
+harden_password_warn_age: 7
+harden_enable_auditd: true
+harden_enable_fail2ban: true

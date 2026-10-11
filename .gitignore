@@ -1,0 +1,25 @@
+# Ansible
+*.retry
+*.log
+.vault_pass
+vault_pass.txt
+
+# Molecule
+.molecule/
+molecule/*/.cache/
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+venv/
+
+# Editors / OS
+.idea/
+.vscode/
+*.swp
+.DS_Store
+Thumbs.db
+
+# Local inventory overrides
+inventory/local.ini
