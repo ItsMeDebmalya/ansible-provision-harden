@@ -61,11 +61,12 @@
   ansible.posix.sysctl:
     name: "{{ item.key }}"
     value: "{{ item.value }}"
-    sysctl_set: true
-    state: present
+    # Apply to the live kernel on real hosts; inside a container /proc/sys is
+    # read-only, so only persist the setting to the sysctl config file there.
+    sysctl_set: "{{ not harden_in_container }}"
     reload: "{{ not harden_in_container }}"
+    state: present
   loop: "{{ harden_sysctl_settings | dict2items }}"
-  failed_when: false   # read-only /proc inside some containers must not fail
 
 # --- Host firewall (CIS 3.5.x) -------------------------------------------
 - name: Harden host firewall
