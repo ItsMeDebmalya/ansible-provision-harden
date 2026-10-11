@@ -1,0 +1,16 @@
+---
+galaxy_info:
+  role_name: patch
+  author: Debmalya Dey
+  description: Apply available OS package and security updates, with optional reboot.
+  license: MIT
+  min_ansible_version: "2.14"
+  platforms:
+    - name: Ubuntu
+      versions: [focal, jammy, noble]
+    - name: EL
+      versions: ["8", "9"]
+  galaxy_tags:
+    - patching
+    - updates
+dependencies: []

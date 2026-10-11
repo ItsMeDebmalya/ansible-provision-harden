@@ -1,0 +1,7 @@
+---
+patch_reboot_if_required: false
+patch_autoremove: true
+patch_reboot_timeout: 600
+# Perform the actual package upgrade. Set false (e.g. in CI/Molecule) to only
+# refresh the package cache without pulling a full distribution upgrade.
+patch_upgrade: true

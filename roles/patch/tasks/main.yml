@@ -1,0 +1,46 @@
+---
+# patch: apply all available security/package updates, cross-distro.
+
+- name: Refresh apt cache (Debian family)
+  ansible.builtin.apt:
+    update_cache: true
+    cache_valid_time: 3600
+  when: ansible_os_family == "Debian"
+
+- name: Upgrade all packages (Debian family)
+  ansible.builtin.apt:
+    upgrade: dist
+    autoremove: "{{ patch_autoremove }}"
+  when:
+    - ansible_os_family == "Debian"
+    - patch_upgrade | bool
+
+- name: Upgrade all packages (RHEL family)  # noqa: package-latest
+  ansible.builtin.dnf:
+    name: "*"
+    state: latest
+    update_cache: true
+  when:
+    - ansible_os_family == "RedHat"
+    - patch_upgrade | bool
+
+- name: Autoremove orphaned packages (RHEL family)
+  ansible.builtin.dnf:
+    autoremove: true
+  when:
+    - ansible_os_family == "RedHat"
+    - patch_autoremove | bool
+    - patch_upgrade | bool
+
+- name: Check whether a reboot is required (Debian family)
+  ansible.builtin.stat:
+    path: /var/run/reboot-required
+  register: patch_reboot_required_file
+  when: ansible_os_family == "Debian"
+
+- name: Reboot if required and permitted
+  ansible.builtin.reboot:
+    reboot_timeout: "{{ patch_reboot_timeout }}"
+  when:
+    - patch_reboot_if_required | bool
+    - (ansible_os_family == "Debian" and patch_reboot_required_file.stat.exists | default(false))
