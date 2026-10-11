@@ -1,0 +1,47 @@
+---
+# provision: base packages, timezone, time sync, and an admin user.
+# Supports both Debian/Ubuntu and RHEL/CentOS/Rocky families.
+
+- name: Set system timezone
+  community.general.timezone:
+    name: "{{ provision_timezone }}"
+
+- name: Install base packages
+  ansible.builtin.package:
+    name: "{{ provision_base_packages }}"
+    state: present
+
+- name: Resolve time-sync service name per distro family
+  ansible.builtin.set_fact:
+    provision_chrony_service: "{{ 'chrony' if ansible_os_family == 'Debian' else 'chronyd' }}"
+
+- name: Enable and start time synchronisation (chrony)
+  ansible.builtin.service:
+    name: "{{ provision_chrony_service }}"
+    state: started
+    enabled: true
+  when: provision_start_services | bool
+
+- name: Ensure admin user exists
+  ansible.builtin.user:
+    name: "{{ provision_admin_user }}"
+    shell: /bin/bash
+    create_home: true
+    state: present
+
+- name: Grant admin user passwordless sudo
+  ansible.builtin.copy:
+    dest: "/etc/sudoers.d/90-{{ provision_admin_user }}"
+    content: "{{ provision_admin_user }} ALL=(ALL) NOPASSWD:ALL\n"
+    owner: root
+    group: root
+    mode: "0440"
+    validate: "visudo -cf %s"
+
+- name: Install authorised keys for admin user
+  ansible.posix.authorized_key:
+    user: "{{ provision_admin_user }}"
+    key: "{{ item }}"
+    state: present
+  loop: "{{ provision_admin_authorized_keys }}"
+  when: provision_admin_authorized_keys | length > 0

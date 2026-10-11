@@ -1,0 +1,17 @@
+---
+provision_timezone: "UTC"
+provision_admin_user: "ansible"
+provision_admin_authorized_keys: []
+provision_base_packages:
+  - vim
+  - curl
+  - wget
+  - git
+  - htop
+  - unzip
+  - chrony
+# NTP daemon service name differs by distro family; resolved in tasks.
+
+# Start/enable services. Set false when testing in a container without a
+# running init system (see molecule/default/converge.yml).
+provision_start_services: true

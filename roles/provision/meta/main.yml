@@ -1,0 +1,16 @@
+---
+galaxy_info:
+  role_name: provision
+  author: Debmalya Dey
+  description: Base provisioning - packages, timezone, time sync, and admin user.
+  license: MIT
+  min_ansible_version: "2.14"
+  platforms:
+    - name: Ubuntu
+      versions: [focal, jammy, noble]
+    - name: EL
+      versions: ["8", "9"]
+  galaxy_tags:
+    - provisioning
+    - baseline
+dependencies: []
