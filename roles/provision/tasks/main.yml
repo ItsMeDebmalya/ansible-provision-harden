@@ -2,20 +2,29 @@
 # provision: base packages, timezone, time sync, and an admin user.
 # Supports both Debian/Ubuntu and RHEL/CentOS/Rocky families.
 
-- name: Set system timezone
-  community.general.timezone:
-    name: "{{ provision_timezone }}"
-
 - name: Refresh apt cache (Debian family)
   ansible.builtin.apt:
     update_cache: true
     cache_valid_time: 3600
   when: ansible_os_family == "Debian"
 
-- name: Install base packages
-  ansible.builtin.package:
+- name: Install base packages (Debian family)
+  ansible.builtin.apt:
     name: "{{ provision_base_packages }}"
     state: present
+  when: ansible_os_family == "Debian"
+
+- name: Install base packages (RHEL family)
+  ansible.builtin.dnf:
+    name: "{{ provision_base_packages }}"
+    state: present
+    allowerasing: true   # resolve curl-minimal -> curl style conflicts
+  when: ansible_os_family == "RedHat"
+
+# Timezone is set after tzdata is installed so the zoneinfo DB is present.
+- name: Set system timezone
+  community.general.timezone:
+    name: "{{ provision_timezone }}"
 
 - name: Resolve time-sync service name per distro family
   ansible.builtin.set_fact:

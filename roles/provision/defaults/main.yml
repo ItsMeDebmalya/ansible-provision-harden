@@ -9,6 +9,7 @@ provision_base_packages:
   - git
   - unzip
   - chrony
+  - tzdata
 # NTP daemon service name differs by distro family; resolved in tasks.
 
 # Start/enable services. Set false when testing in a container without a

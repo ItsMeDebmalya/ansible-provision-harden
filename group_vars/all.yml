@@ -15,6 +15,7 @@ provision_base_packages:
   - git
   - unzip
   - chrony
+  - tzdata
 
 # --- patch role -------------------------------------------------------------
 patch_reboot_if_required: false      # set true in maintenance windows
