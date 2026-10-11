@@ -1,0 +1,50 @@
+---
+# Molecule verify: assert the roles produced the expected hardened state.
+
+- name: Verify
+  hosts: all
+  become: true
+  tasks:
+    - name: Read hardened sshd drop-in
+      ansible.builtin.slurp:
+        src: /etc/ssh/sshd_config.d/99-hardening.conf
+      register: _sshd_conf
+
+    - name: Assert SSH is hardened
+      vars:
+        _conf: "{{ _sshd_conf.content | b64decode }}"
+      ansible.builtin.assert:
+        that:
+          - "'PermitRootLogin no' in _conf"
+          - "'PasswordAuthentication no' in _conf"
+          - "'MaxAuthTries 4' in _conf"
+          - "'X11Forwarding no' in _conf"
+        fail_msg: "sshd hardening drop-in missing expected directives"
+        success_msg: "sshd hardening directives present"
+
+    - name: Read login.defs
+      ansible.builtin.slurp:
+        src: /etc/login.defs
+      register: _login_defs
+
+    - name: Assert password ageing policy applied
+      vars:
+        _defs: "{{ _login_defs.content | b64decode }}"
+      ansible.builtin.assert:
+        that:
+          - _defs is search('PASS_MAX_DAYS\s+365')
+          - _defs is search('PASS_MIN_DAYS\s+7')
+        fail_msg: "password ageing policy not applied in /etc/login.defs"
+        success_msg: "password ageing policy present"
+
+    - name: Check admin user exists
+      ansible.builtin.command: id ansible
+      changed_when: false
+
+    - name: Check auditd package is installed
+      ansible.builtin.package:
+        name: "{{ 'auditd' if ansible_os_family == 'Debian' else 'audit' }}"
+        state: present
+      check_mode: true
+      register: _auditd_pkg
+      failed_when: _auditd_pkg.changed

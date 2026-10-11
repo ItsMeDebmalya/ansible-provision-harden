@@ -1,0 +1,18 @@
+---
+# Molecule converge: run all three roles against ephemeral containers.
+# Container-unsafe actions (starting services, firewall, sysctl reload) are
+# disabled here; they are exercised on real hosts via site.yml.
+
+- name: Converge
+  hosts: all
+  become: true
+  vars:
+    provision_start_services: false
+    patch_upgrade: false
+    harden_in_container: true
+    harden_manage_firewall: false
+    provision_admin_user: ansible
+  roles:
+    - role: provision
+    - role: patch
+    - role: harden
