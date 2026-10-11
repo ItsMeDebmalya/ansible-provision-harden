@@ -88,6 +88,10 @@ molecule converge  # apply and keep the containers for inspection
 > skipped inside test containers via role flags and exercised on real hosts
 > through `site.yml`.
 
+CI runs this on every push and PR; the idempotence stage reports **zero
+changes** on the second run across both distros. See
+[docs/CI-RESULTS.md](docs/CI-RESULTS.md) for the recorded output.
+
 ## Verifying hardening on a real host
 
 Run a Lynis audit before and after to see the baseline improvement:
